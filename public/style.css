@@ -88,7 +88,7 @@ body {
 }
 
 canvas#game {
-  width: min(940px, 96vw);
+  width: min(1692px, 96vw);
   height: auto;
   border-radius: 16px;
   border: 1px solid var(--stroke);
@@ -125,7 +125,7 @@ canvas#game {
 }
 
 .help {
-  width: min(940px, 96vw);
+  width: min(1692px, 96vw);
   display: grid;
   grid-template-columns: 1fr;
   gap: 6px;
@@ -136,7 +136,7 @@ canvas#game {
 }
 
 .panel {
-  width: min(940px, 96vw);
+  width: min(1692px, 96vw);
   display: grid;
   gap: 10px;
   padding: 12px 14px;

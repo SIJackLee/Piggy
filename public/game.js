@@ -201,9 +201,27 @@
     }
   }
 
-  const W = canvas.width;
-  const H = canvas.height;
+  // World coordinates (keep gameplay feel consistent)
+  const WORLD_W = 900;
+  const WORLD_H = 360;
+
+  // Viewport scaling: width 180%, height 3x (letterboxed to keep aspect for sprites)
+  const VIEW_SCALE_X = 1.8;
+  const VIEW_SCALE_Y = 3.0;
+  const VIEW_W = Math.round(WORLD_W * VIEW_SCALE_X);
+  const VIEW_H = Math.round(WORLD_H * VIEW_SCALE_Y);
+
+  // Ensure the actual canvas buffer matches the intended viewport.
+  canvas.width = VIEW_W;
+  canvas.height = VIEW_H;
+
+  const W = WORLD_W;
+  const H = WORLD_H;
   const GROUND_Y = Math.round(H * 0.78);
+
+  const RENDER_SCALE = VIEW_SCALE_X; // keep uniform scaling (no stretching)
+  const RENDER_OX = Math.round((canvas.width - W * RENDER_SCALE) / 2);
+  const RENDER_OY = Math.round((canvas.height - H * RENDER_SCALE) / 2);
 
   const rand = (min, max) => Math.random() * (max - min) + min;
 
@@ -743,28 +761,32 @@
     const shakePx = state.shake > 0 ? Math.round(rand(-5, 5) * state.shake * 10) : 0;
     if (state.shake > 0) state.shake = Math.max(0, state.shake - 0.02);
 
-    ctx.save();
-    ctx.translate(shakePx, 0);
-
-    // background gradient
-    const g = ctx.createLinearGradient(0, 0, 0, H);
-    g.addColorStop(0, theme().skyTop);
-    g.addColorStop(1, theme().skyBottom);
+    // Full-viewport background (unscaled)
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    const t = theme();
+    const g = ctx.createLinearGradient(0, 0, 0, canvas.height);
+    g.addColorStop(0, t.skyTop);
+    g.addColorStop(1, t.skyBottom);
     ctx.fillStyle = g;
-    ctx.fillRect(0, 0, W, H);
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     if (activeTheme.id === "space") {
-      // stars
+      // stars across the whole viewport
       ctx.save();
       ctx.globalAlpha = 0.55;
       ctx.fillStyle = "rgba(255,255,255,0.7)";
-      for (let i = 0; i < 45; i++) {
-        const x = (i * 97 + Math.floor(state.t * 30)) % W;
-        const y = (i * 53) % Math.floor(H * 0.6);
+      for (let i = 0; i < 90; i++) {
+        const x = (i * 97 + Math.floor(state.t * 30)) % canvas.width;
+        const y = (i * 53) % Math.floor(canvas.height * 0.65);
         ctx.fillRect(x, y, 2, 2);
       }
       ctx.restore();
     }
+
+    // World rendering (uniform scale + letterbox)
+    ctx.save();
+    ctx.setTransform(RENDER_SCALE, 0, 0, RENDER_SCALE, RENDER_OX, RENDER_OY);
+    ctx.translate(shakePx, 0);
 
     // clouds
     for (const c of state.clouds) drawCloud(c);
@@ -778,7 +800,7 @@
     // pig
     drawPig();
 
-    // top in-canvas mini HUD
+    // top in-canvas mini HUD (world space)
     ctx.fillStyle = "rgba(255,255,255,0.12)";
     ctx.fillRect(14, 14, 150, 34);
     ctx.strokeStyle = "rgba(255,255,255,0.1)";
