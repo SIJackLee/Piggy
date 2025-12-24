@@ -9,6 +9,7 @@
   const scoreEl = document.getElementById("score");
   const bestEl = document.getElementById("best");
   const themeSelect = document.getElementById("theme");
+  const randomThemeToggle = document.getElementById("randomTheme");
   const playerIdInput = document.getElementById("playerId");
   const savePlayerBtn = document.getElementById("savePlayer");
   const refreshBoardBtn = document.getElementById("refreshBoard");
@@ -23,6 +24,7 @@
   let playerId = localStorage.getItem(PLAYER_KEY) || "";
 
   const THEME_KEY = "pigjump_theme_v1";
+  const RANDOM_THEME_KEY = "pigjump_random_theme_v1";
   const THEMES = [
     {
       id: "farm",
@@ -111,11 +113,30 @@
   }
 
   let activeTheme = getThemeById(localStorage.getItem(THEME_KEY) || "farm");
+  let randomThemeEnabled = (localStorage.getItem(RANDOM_THEME_KEY) || "0") === "1";
+
+  function setRandomThemeEnabled(enabled) {
+    randomThemeEnabled = Boolean(enabled);
+    localStorage.setItem(RANDOM_THEME_KEY, randomThemeEnabled ? "1" : "0");
+    if (randomThemeToggle) randomThemeToggle.checked = randomThemeEnabled;
+    if (themeSelect) themeSelect.disabled = randomThemeEnabled;
+  }
 
   function applyTheme(themeId) {
     activeTheme = getThemeById(themeId);
     localStorage.setItem(THEME_KEY, activeTheme.id);
     if (themeSelect) themeSelect.value = activeTheme.id;
+  }
+
+  function pickRandomTheme(excludeId) {
+    const pool = THEMES.filter((t) => t.id !== excludeId);
+    const pickFrom = pool.length > 0 ? pool : THEMES;
+    return pickFrom[Math.floor(Math.random() * pickFrom.length)];
+  }
+
+  function applyRandomTheme() {
+    const next = pickRandomTheme(activeTheme?.id);
+    applyTheme(next.id);
   }
 
   function setBoardMsg(msg) {
@@ -141,6 +162,17 @@
     localStorage.setItem(PLAYER_KEY, playerId);
     if (playerIdInput) playerIdInput.value = playerId;
     setBoardMsg(`아이디 저장됨: ${playerId}`);
+    return true;
+  }
+
+  function ensurePlayerIdFromInput() {
+    const typed = String(playerIdInput?.value || "").trim();
+    if (!typed) return false;
+    if (!isValidPlayerId(typed)) return false;
+    if (typed !== playerId) {
+      playerId = typed;
+      localStorage.setItem(PLAYER_KEY, playerId);
+    }
     return true;
   }
 
@@ -208,6 +240,7 @@
   pig.y = GROUND_Y - pig.h;
 
   function reset() {
+    if (randomThemeEnabled) applyRandomTheme();
     state.running = true;
     state.gameOver = false;
     state.t = 0;
@@ -276,6 +309,7 @@
     updateHUD();
 
     // Send best score to server (optional)
+    ensurePlayerIdFromInput();
     if (playerId) {
       fetch("/api/score", {
         method: "POST",
@@ -312,6 +346,13 @@
 
   if (playerIdInput) playerIdInput.value = playerId;
   applyTheme(activeTheme.id);
+  setRandomThemeEnabled(randomThemeEnabled);
+  if (randomThemeToggle) {
+    randomThemeToggle.addEventListener("change", () => {
+      setRandomThemeEnabled(randomThemeToggle.checked);
+      if (randomThemeEnabled) applyRandomTheme();
+    });
+  }
   if (themeSelect) {
     themeSelect.addEventListener("change", () => {
       applyTheme(themeSelect.value);
@@ -320,6 +361,18 @@
   if (savePlayerBtn) {
     savePlayerBtn.addEventListener("click", () => {
       savePlayerId(playerIdInput?.value);
+    });
+  }
+  if (playerIdInput) {
+    playerIdInput.addEventListener("change", () => {
+      // no button needed: just changing the value will persist when valid
+      if (ensurePlayerIdFromInput()) setBoardMsg(`아이디 저장됨: ${playerId}`);
+    });
+    playerIdInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        if (ensurePlayerIdFromInput()) setBoardMsg(`아이디 저장됨: ${playerId}`);
+      }
     });
   }
   if (refreshBoardBtn) refreshBoardBtn.addEventListener("click", refreshLeaderboard);
