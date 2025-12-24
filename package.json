@@ -5,8 +5,8 @@
   "description": "Pig Jump (Dino clone variant) - HTML5 Canvas + Vercel Functions + Supabase",
   "license": "UNLICENSED",
   "scripts": {
-    "dev": "npx --yes serve . -l 3000",
-    "start": "npx --yes serve . -l 3000",
+    "dev": "npx --yes serve public -l 3000",
+    "start": "npx --yes serve public -l 3000",
     "build": "node -e \"console.log('no build: static + vercel functions')\""
   },
   "engines": {

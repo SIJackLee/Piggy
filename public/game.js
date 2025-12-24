@@ -26,7 +26,12 @@
   }
 
   function isValidPlayerId(id) {
-    return typeof id === "string" && id.length >= 2 && id.length <= 20 && /^[a-zA-Z0-9가-힣 _-]+$/.test(id);
+    return (
+      typeof id === "string" &&
+      id.length >= 2 &&
+      id.length <= 20 &&
+      /^[a-zA-Z0-9가-힣 _-]+$/.test(id)
+    );
   }
 
   function savePlayerId(next) {
