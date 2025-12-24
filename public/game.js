@@ -8,6 +8,7 @@
 
   const scoreEl = document.getElementById("score");
   const bestEl = document.getElementById("best");
+  const themeSelect = document.getElementById("theme");
   const playerIdInput = document.getElementById("playerId");
   const savePlayerBtn = document.getElementById("savePlayer");
   const refreshBoardBtn = document.getElementById("refreshBoard");
@@ -20,6 +21,102 @@
 
   const PLAYER_KEY = "pigjump_player_id_v1";
   let playerId = localStorage.getItem(PLAYER_KEY) || "";
+
+  const THEME_KEY = "pigjump_theme_v1";
+  const THEMES = [
+    {
+      id: "farm",
+      name: "Farm",
+      obstacleKinds: ["fence", "hay"],
+      palette: {
+        skyTop: "#0f1020",
+        skyBottom: "#090a12",
+        ground: "#141621",
+        groundLine: "rgba(255,255,255,0.14)",
+        grass: "rgba(126,231,135,0.7)",
+        accent: "#ff5aa5",
+        pig: "#ff9ac9",
+        pig2: "#ff6fb3",
+        pigStroke: "rgba(0,0,0,0.35)",
+        obstacle: "#c9cbd6",
+        obstacle2: "#9aa0b6",
+        text: "rgba(255,255,255,0.92)",
+        muted: "rgba(255,255,255,0.55)",
+      },
+    },
+    {
+      id: "space",
+      name: "Space",
+      obstacleKinds: ["asteroid", "satellite"],
+      palette: {
+        skyTop: "#060615",
+        skyBottom: "#02020a",
+        ground: "#0b0c11",
+        groundLine: "rgba(255,255,255,0.10)",
+        grass: "rgba(125, 211, 252, 0.35)",
+        accent: "#60a5fa",
+        pig: "#ffd1e8",
+        pig2: "#ff8cc8",
+        pigStroke: "rgba(0,0,0,0.35)",
+        obstacle: "#a3a3a3",
+        obstacle2: "#5b5b5b",
+        text: "rgba(255,255,255,0.92)",
+        muted: "rgba(255,255,255,0.55)",
+      },
+    },
+    {
+      id: "factory",
+      name: "Factory",
+      obstacleKinds: ["barrel", "cone"],
+      palette: {
+        skyTop: "#0b1020",
+        skyBottom: "#070a12",
+        ground: "#0f1218",
+        groundLine: "rgba(255,255,255,0.10)",
+        grass: "rgba(250, 204, 21, 0.55)",
+        accent: "#f59e0b",
+        pig: "#ffc3dd",
+        pig2: "#ff73b6",
+        pigStroke: "rgba(0,0,0,0.35)",
+        obstacle: "#cbd5e1",
+        obstacle2: "#64748b",
+        text: "rgba(255,255,255,0.92)",
+        muted: "rgba(255,255,255,0.55)",
+      },
+    },
+    {
+      id: "candy",
+      name: "Candy",
+      obstacleKinds: ["lollipop", "cupcake"],
+      palette: {
+        skyTop: "#2a0b2e",
+        skyBottom: "#140515",
+        ground: "#1b1020",
+        groundLine: "rgba(255,255,255,0.12)",
+        grass: "rgba(251, 113, 133, 0.65)",
+        accent: "#fb7185",
+        pig: "#ffd1dc",
+        pig2: "#ff7ab8",
+        pigStroke: "rgba(0,0,0,0.35)",
+        obstacle: "#f8fafc",
+        obstacle2: "#a78bfa",
+        text: "rgba(255,255,255,0.92)",
+        muted: "rgba(255,255,255,0.55)",
+      },
+    },
+  ];
+
+  function getThemeById(id) {
+    return THEMES.find((t) => t.id === id) ?? THEMES[0];
+  }
+
+  let activeTheme = getThemeById(localStorage.getItem(THEME_KEY) || "farm");
+
+  function applyTheme(themeId) {
+    activeTheme = getThemeById(themeId);
+    localStorage.setItem(THEME_KEY, activeTheme.id);
+    if (themeSelect) themeSelect.value = activeTheme.id;
+  }
 
   function setBoardMsg(msg) {
     if (boardMsgEl) boardMsgEl.textContent = msg;
@@ -83,22 +180,7 @@
   const aabb = (a, b) =>
     a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
 
-  const theme = {
-    skyTop: "#0f1020",
-    skyBottom: "#090a12",
-    ground: "#141621",
-    groundLine: "rgba(255,255,255,0.14)",
-    grass: "rgba(126,231,135,0.7)",
-    accent: "#ff5aa5",
-    pig: "#ff9ac9",
-    pig2: "#ff6fb3",
-    pigStroke: "rgba(0,0,0,0.35)",
-    obstacle: "#c9cbd6",
-    obstacle2: "#9aa0b6",
-    text: "rgba(255,255,255,0.92)",
-    muted: "rgba(255,255,255,0.55)",
-    danger: "#ff4d4d",
-  };
+  const theme = () => ({ ...activeTheme.palette, danger: "#ff4d4d" });
 
   const state = {
     running: false,
@@ -161,19 +243,18 @@
   }
 
   function makeObstacle() {
-    // kind: fence (low) or haybale (tall)
-    const roll = Math.random();
-    const kind = roll < 0.6 ? "fence" : "hay";
+    const kinds = activeTheme.obstacleKinds ?? ["fence", "hay"];
+    const kind = kinds[Math.floor(Math.random() * kinds.length)];
     const scale = clamp(1 + (state.speed - 330) / 900, 1, 1.55);
 
-    if (kind === "fence") {
+    if (kind === "fence" || kind === "cone") {
       const w = Math.round(rand(18, 28) * scale);
       const h = Math.round(rand(30, 44) * scale);
       return { x: W + 8, y: GROUND_Y - h, w, h, kind };
     }
-    // haybale
-    const w = Math.round(rand(26, 38) * scale);
-    const h = Math.round(rand(38, 62) * scale);
+    // tall-ish
+    const w = Math.round(rand(26, 40) * scale);
+    const h = Math.round(rand(38, 66) * scale);
     return { x: W + 8, y: GROUND_Y - h, w, h, kind };
   }
 
@@ -230,6 +311,12 @@
   });
 
   if (playerIdInput) playerIdInput.value = playerId;
+  applyTheme(activeTheme.id);
+  if (themeSelect) {
+    themeSelect.addEventListener("change", () => {
+      applyTheme(themeSelect.value);
+    });
+  }
   if (savePlayerBtn) {
     savePlayerBtn.addEventListener("click", () => {
       savePlayerId(playerIdInput?.value);
@@ -252,26 +339,46 @@
   function drawCloud(c) {
     ctx.save();
     ctx.globalAlpha = 0.55;
-    ctx.fillStyle = "rgba(255,255,255,0.16)";
+    const t = theme();
+    ctx.fillStyle =
+      activeTheme.id === "space" ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.16)";
     drawRoundedRect(c.x, c.y, c.w, c.h, c.h / 2);
     ctx.fill();
     ctx.restore();
   }
 
   function drawGround() {
+    const t = theme();
     // ground block
-    ctx.fillStyle = theme.ground;
+    ctx.fillStyle = t.ground;
     ctx.fillRect(0, GROUND_Y, W, H - GROUND_Y);
     // line
-    ctx.strokeStyle = theme.groundLine;
+    ctx.strokeStyle = t.groundLine;
     ctx.lineWidth = 2;
     ctx.beginPath();
     ctx.moveTo(0, GROUND_Y + 0.5);
     ctx.lineTo(W, GROUND_Y + 0.5);
     ctx.stroke();
 
+    if (activeTheme.id === "space") {
+      // simple craters
+      ctx.save();
+      ctx.globalAlpha = 0.35;
+      for (let i = 0; i < 5; i++) {
+        const x = ((i * 220 - (state.t * state.speed * 0.25) % 1100) + 1100) % 1100;
+        const cx = x - 100;
+        const cy = GROUND_Y + 24 + (i % 2) * 8;
+        ctx.fillStyle = "rgba(255,255,255,0.08)";
+        ctx.beginPath();
+        ctx.ellipse(cx, cy, 28, 10, 0, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.restore();
+      return;
+    }
+
     // grass dashes
-    ctx.strokeStyle = theme.grass;
+    ctx.strokeStyle = t.grass;
     ctx.globalAlpha = 0.7;
     ctx.lineWidth = 2;
     const dashLen = 14;
@@ -311,8 +418,9 @@
     ctx.translate(-pig.w / 2, -pig.h / 2);
 
     // body base
-    ctx.fillStyle = theme.pig;
-    ctx.strokeStyle = theme.pigStroke;
+    const t = theme();
+    ctx.fillStyle = t.pig;
+    ctx.strokeStyle = t.pigStroke;
     ctx.lineWidth = 2;
     drawRoundedRect(2, 6, pig.w - 4, pig.h - 10, 16);
     ctx.fill();
@@ -326,7 +434,7 @@
     ctx.globalAlpha = 1;
 
     // ear
-    ctx.fillStyle = theme.pig2;
+    ctx.fillStyle = t.pig2;
     ctx.beginPath();
     ctx.moveTo(14, 6);
     ctx.quadraticCurveTo(10, -2, 18, 1);
@@ -335,7 +443,7 @@
     ctx.fill();
 
     // snout
-    ctx.fillStyle = theme.pig2;
+    ctx.fillStyle = t.pig2;
     drawRoundedRect(pig.w - 20, 16, 16, 14, 7);
     ctx.fill();
     ctx.stroke();
@@ -352,7 +460,7 @@
     ctx.arc(pig.w - 26, 18, 3, 0, Math.PI * 2);
     ctx.fill();
     // cheek
-    ctx.fillStyle = theme.accent;
+    ctx.fillStyle = t.accent;
     ctx.globalAlpha = 0.55;
     ctx.beginPath();
     ctx.arc(pig.w - 30, 26, 4, 0, Math.PI * 2);
@@ -360,7 +468,7 @@
     ctx.globalAlpha = 1;
 
     // legs
-    ctx.fillStyle = theme.pig2;
+    ctx.fillStyle = t.pig2;
     const legY = pig.h - 6;
     drawRoundedRect(12, legY, 8, 10, 4);
     drawRoundedRect(pig.w - 24, legY, 8, 10, 4);
@@ -372,10 +480,11 @@
   function drawObstacle(o) {
     ctx.save();
     ctx.translate(o.x, o.y);
+    const t = theme();
 
     if (o.kind === "fence") {
       // fence: two posts + bars
-      ctx.fillStyle = theme.obstacle2;
+      ctx.fillStyle = t.obstacle2;
       drawRoundedRect(0, 0, o.w, o.h, 8);
       ctx.fill();
 
@@ -383,14 +492,14 @@
       ctx.lineWidth = 2;
       ctx.strokeRect(1, 1, o.w - 2, o.h - 2);
 
-      ctx.fillStyle = theme.obstacle;
+      ctx.fillStyle = t.obstacle;
       const barH = Math.max(4, Math.round(o.h * 0.14));
       const y1 = Math.round(o.h * 0.25);
       const y2 = Math.round(o.h * 0.55);
       drawRoundedRect(2, y1, o.w - 4, barH, 6);
       drawRoundedRect(2, y2, o.w - 4, barH, 6);
       ctx.fill();
-    } else {
+    } else if (o.kind === "hay") {
       // hay: stack
       ctx.fillStyle = "#d7b15a";
       drawRoundedRect(0, 0, o.w, o.h, 10);
@@ -407,6 +516,76 @@
         ctx.lineTo(o.w - 6, i);
         ctx.stroke();
       }
+    } else if (o.kind === "asteroid") {
+      ctx.fillStyle = t.obstacle2;
+      ctx.beginPath();
+      ctx.ellipse(o.w / 2, o.h / 2, o.w / 2, o.h / 2, 0.2, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "rgba(255,255,255,0.10)";
+      ctx.beginPath();
+      ctx.ellipse(o.w * 0.35, o.h * 0.35, o.w * 0.12, o.h * 0.10, 0, 0, Math.PI * 2);
+      ctx.fill();
+    } else if (o.kind === "satellite") {
+      ctx.fillStyle = t.obstacle;
+      drawRoundedRect(o.w * 0.25, o.h * 0.2, o.w * 0.5, o.h * 0.6, 6);
+      ctx.fill();
+      ctx.fillStyle = t.accent;
+      drawRoundedRect(0, o.h * 0.35, o.w * 0.22, o.h * 0.3, 5);
+      drawRoundedRect(o.w * 0.78, o.h * 0.35, o.w * 0.22, o.h * 0.3, 5);
+      ctx.fill();
+    } else if (o.kind === "barrel") {
+      ctx.fillStyle = t.obstacle2;
+      drawRoundedRect(0, 0, o.w, o.h, 10);
+      ctx.fill();
+      ctx.strokeStyle = "rgba(255,255,255,0.12)";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(6, o.h * 0.35);
+      ctx.lineTo(o.w - 6, o.h * 0.35);
+      ctx.moveTo(6, o.h * 0.65);
+      ctx.lineTo(o.w - 6, o.h * 0.65);
+      ctx.stroke();
+    } else if (o.kind === "cone") {
+      ctx.fillStyle = t.accent;
+      ctx.beginPath();
+      ctx.moveTo(o.w / 2, 0);
+      ctx.lineTo(o.w, o.h);
+      ctx.lineTo(0, o.h);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = "rgba(255,255,255,0.18)";
+      drawRoundedRect(0, o.h * 0.78, o.w, o.h * 0.22, 6);
+      ctx.fill();
+    } else if (o.kind === "lollipop") {
+      // stick + candy head
+      ctx.fillStyle = "rgba(255,255,255,0.55)";
+      drawRoundedRect(o.w * 0.45, o.h * 0.25, o.w * 0.1, o.h * 0.75, 6);
+      ctx.fill();
+      ctx.fillStyle = t.accent;
+      ctx.beginPath();
+      ctx.arc(o.w * 0.5, o.h * 0.25, Math.min(o.w, o.h) * 0.28, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = "rgba(255,255,255,0.25)";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(o.w * 0.5, o.h * 0.25, Math.min(o.w, o.h) * 0.18, 0.3, 4.6);
+      ctx.stroke();
+    } else if (o.kind === "cupcake") {
+      ctx.fillStyle = t.obstacle2;
+      drawRoundedRect(o.w * 0.15, o.h * 0.45, o.w * 0.7, o.h * 0.55, 10);
+      ctx.fill();
+      ctx.fillStyle = t.obstacle;
+      ctx.beginPath();
+      ctx.arc(o.w * 0.5, o.h * 0.45, o.w * 0.32, Math.PI, 0);
+      ctx.fill();
+      ctx.fillStyle = t.accent;
+      ctx.beginPath();
+      ctx.arc(o.w * 0.5, o.h * 0.15, o.w * 0.10, 0, Math.PI * 2);
+      ctx.fill();
+    } else {
+      ctx.fillStyle = t.obstacle2;
+      drawRoundedRect(0, 0, o.w, o.h, 10);
+      ctx.fill();
     }
     ctx.restore();
   }
@@ -416,7 +595,7 @@
     ctx.fillStyle = "rgba(0,0,0,0.25)";
     ctx.fillRect(0, 0, W, H);
 
-    ctx.fillStyle = theme.text;
+    ctx.fillStyle = theme().text;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
 
@@ -425,7 +604,7 @@
 
     ctx.font = "500 15px ui-sans-serif, system-ui";
     const hint = state.gameOver ? "SPACE/↑/터치로 다시 시작 · R 재시작" : "SPACE/↑/터치로 시작";
-    ctx.fillStyle = theme.muted;
+    ctx.fillStyle = theme().muted;
     ctx.fillText(hint, W / 2, H * 0.52);
 
     ctx.restore();
@@ -497,10 +676,23 @@
 
     // background gradient
     const g = ctx.createLinearGradient(0, 0, 0, H);
-    g.addColorStop(0, theme.skyTop);
-    g.addColorStop(1, theme.skyBottom);
+    g.addColorStop(0, theme().skyTop);
+    g.addColorStop(1, theme().skyBottom);
     ctx.fillStyle = g;
     ctx.fillRect(0, 0, W, H);
+
+    if (activeTheme.id === "space") {
+      // stars
+      ctx.save();
+      ctx.globalAlpha = 0.55;
+      ctx.fillStyle = "rgba(255,255,255,0.7)";
+      for (let i = 0; i < 45; i++) {
+        const x = (i * 97 + Math.floor(state.t * 30)) % W;
+        const y = (i * 53) % Math.floor(H * 0.6);
+        ctx.fillRect(x, y, 2, 2);
+      }
+      ctx.restore();
+    }
 
     // clouds
     for (const c of state.clouds) drawCloud(c);
@@ -519,7 +711,7 @@
     ctx.fillRect(14, 14, 150, 34);
     ctx.strokeStyle = "rgba(255,255,255,0.1)";
     ctx.strokeRect(14, 14, 150, 34);
-    ctx.fillStyle = theme.text;
+    ctx.fillStyle = theme().text;
     ctx.font = "600 14px ui-sans-serif, system-ui";
     ctx.textAlign = "left";
     ctx.textBaseline = "middle";

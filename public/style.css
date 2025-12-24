@@ -131,6 +131,10 @@ canvas#game {
   min-width: min(340px, 90vw);
 }
 
+.field--compact {
+  min-width: 160px;
+}
+
 .field__label {
   font-size: 12px;
   color: var(--muted);
