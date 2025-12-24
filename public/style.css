@@ -95,6 +95,33 @@ canvas#game {
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(0, 0, 0, 0.22));
   box-shadow: 0 30px 90px rgba(0, 0, 0, 0.35);
   touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.stage {
+  touch-action: manipulation;
+}
+
+@media (max-width: 520px) {
+  body {
+    padding: 10px;
+  }
+
+  .topbar {
+    padding: 10px 12px;
+  }
+
+  canvas#game {
+    border-radius: 14px;
+  }
+
+  .panel__row {
+    gap: 8px;
+  }
+
+  .field {
+    min-width: min(280px, 90vw);
+  }
 }
 
 .help {

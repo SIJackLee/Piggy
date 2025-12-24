@@ -330,6 +330,13 @@
     }
   }
 
+  function shouldIgnoreGlobalTap(target) {
+    if (!target) return false;
+    const t = /** @type {HTMLElement} */ (target);
+    const tag = (t.tagName || "").toLowerCase();
+    return tag === "input" || tag === "select" || tag === "button" || !!t.closest("button, input, select, label");
+  }
+
   // Input
   window.addEventListener("keydown", (e) => {
     if (e.repeat) return;
@@ -343,6 +350,18 @@
     e.preventDefault();
     jump();
   });
+
+  // Mobile-friendly: tap anywhere (except controls) to jump
+  document.addEventListener(
+    "pointerdown",
+    (e) => {
+      if (shouldIgnoreGlobalTap(e.target)) return;
+      // don't double-trigger if canvas already handled it
+      if (e.target === canvas) return;
+      jump();
+    },
+    { passive: true },
+  );
 
   if (playerIdInput) playerIdInput.value = playerId;
   applyTheme(activeTheme.id);
