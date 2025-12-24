@@ -22,34 +22,48 @@
     <main class="stage">
       <canvas id="game" width="1620" height="1080" aria-label="돼지 점프 게임 화면" role="img"></canvas>
 
-      <section class="panel" aria-label="플레이어 설정과 리더보드">
-        <div class="panel__row">
-          <label class="field field--compact">
-            <span class="field__label">테마</span>
-            <select id="theme" class="field__input" aria-label="게임 테마 선택">
-              <option value="farm">Farm</option>
-              <option value="space">Space</option>
-              <option value="factory">Factory</option>
-              <option value="candy">Candy</option>
-            </select>
-          </label>
-          <label class="field field--compact">
-            <span class="field__label">랜덤</span>
-            <label class="toggle">
-              <input id="randomTheme" type="checkbox" />
-              <span class="toggle__pill" aria-hidden="true"></span>
-              <span class="toggle__text">테마 랜덤</span>
+      <section id="startScreen" class="start" aria-label="시작 화면">
+        <div class="start__card" role="dialog" aria-modal="true" aria-label="게임 시작">
+          <div class="start__header">
+            <h2 id="startTitle" class="start__title">돼지 점프</h2>
+            <p id="startSubtitle" class="start__subtitle">아이디 입력 후 시작하기를 눌러주세요.</p>
+          </div>
+
+          <div class="start__controls">
+            <label class="field field--compact">
+              <span class="field__label">테마</span>
+              <select id="theme" class="field__input" aria-label="게임 테마 선택">
+                <option value="farm">Farm</option>
+                <option value="space">Space</option>
+                <option value="factory">Factory</option>
+                <option value="candy">Candy</option>
+              </select>
             </label>
-          </label>
-          <label class="field">
-            <span class="field__label">아이디(닉네임)</span>
-            <input id="playerId" class="field__input" maxlength="20" placeholder="예: piggy_01" />
-          </label>
-          <button id="savePlayer" class="btn" type="button">저장</button>
-          <button id="refreshBoard" class="btn btn--ghost" type="button">리더보드</button>
+
+            <label class="field field--compact">
+              <span class="field__label">랜덤</span>
+              <label class="toggle">
+                <input id="randomTheme" type="checkbox" />
+                <span class="toggle__pill" aria-hidden="true"></span>
+                <span class="toggle__text">테마 랜덤</span>
+              </label>
+            </label>
+
+            <label class="field start__player">
+              <span class="field__label">아이디(닉네임)</span>
+              <input id="playerId" class="field__input" maxlength="20" placeholder="예: piggy_01" />
+            </label>
+
+            <button id="startBtn" class="btn" type="button">시작하기</button>
+          </div>
+
+          <p id="boardMsg" class="muted" aria-live="polite"></p>
+
+          <div class="start__board">
+            <div class="start__boardTitle">전체 등수</div>
+            <ol id="leaderboard" class="board" aria-label="전체 등수 목록"></ol>
+          </div>
         </div>
-        <ol id="leaderboard" class="board" aria-label="리더보드 목록"></ol>
-        <p id="boardMsg" class="muted" aria-live="polite"></p>
       </section>
 
       <section class="help" aria-label="조작 안내">

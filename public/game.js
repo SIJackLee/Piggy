@@ -8,11 +8,13 @@
 
   const scoreEl = document.getElementById("score");
   const bestEl = document.getElementById("best");
+  const startScreen = document.getElementById("startScreen");
+  const startBtn = document.getElementById("startBtn");
+  const startTitle = document.getElementById("startTitle");
+  const startSubtitle = document.getElementById("startSubtitle");
   const themeSelect = document.getElementById("theme");
   const randomThemeToggle = document.getElementById("randomTheme");
   const playerIdInput = document.getElementById("playerId");
-  const savePlayerBtn = document.getElementById("savePlayer");
-  const refreshBoardBtn = document.getElementById("refreshBoard");
   const boardEl = document.getElementById("leaderboard");
   const boardMsgEl = document.getElementById("boardMsg");
 
@@ -143,6 +145,25 @@
     if (boardMsgEl) boardMsgEl.textContent = msg;
   }
 
+  function setStartText(title, subtitle, buttonLabel) {
+    if (startTitle) startTitle.textContent = title;
+    if (startSubtitle) startSubtitle.textContent = subtitle;
+    if (startBtn) startBtn.textContent = buttonLabel;
+  }
+
+  function showStartScreen(mode, finalScore) {
+    if (startScreen) startScreen.style.display = "grid";
+    if (mode === "gameover") {
+      setStartText("GAME OVER", `점수: ${finalScore ?? 0} · 아이디 입력 후 다시 시작할 수 있어요.`, "다시 시작");
+    } else {
+      setStartText("돼지 점프", "아이디 입력 후 시작하기를 눌러주세요.", "시작하기");
+    }
+  }
+
+  function hideStartScreen() {
+    if (startScreen) startScreen.style.display = "none";
+  }
+
   function isValidPlayerId(id) {
     return (
       typeof id === "string" &&
@@ -181,7 +202,7 @@
     setBoardMsg("리더보드 불러오는 중...");
     boardEl.innerHTML = "";
     try {
-      const res = await fetch("/api/leaderboard?top=10", { method: "GET" });
+      const res = await fetch("/api/leaderboard?top=50", { method: "GET" });
       const data = await res.json();
       if (!res.ok || !data?.ok) throw new Error(data?.error || "Failed");
 
@@ -235,6 +256,7 @@
   const state = {
     running: false,
     gameOver: false,
+    lastScore: 0,
     t: 0,
     score: 0,
     speed: 330, // px/s
@@ -261,6 +283,7 @@
     if (randomThemeEnabled) applyRandomTheme();
     state.running = true;
     state.gameOver = false;
+    state.lastScore = 0;
     state.t = 0;
     state.score = 0;
     state.speed = 330;
@@ -310,8 +333,7 @@
   }
 
   function jump() {
-    if (!state.running) reset();
-    if (state.gameOver) return;
+    if (!state.running || state.gameOver) return;
     if (pig.onGround) {
       pig.vy = pig.jumpVel;
       pig.onGround = false;
@@ -322,6 +344,7 @@
     state.gameOver = true;
     state.running = false;
     state.shake = 0.2;
+    state.lastScore = Math.floor(state.score);
     best = Math.max(best, Math.floor(state.score));
     localStorage.setItem(BEST_KEY, String(best));
     updateHUD();
@@ -346,6 +369,8 @@
     } else {
       setBoardMsg("아이디를 저장하면 리더보드에 기록할 수 있어요.");
     }
+
+    showStartScreen("gameover", state.lastScore);
   }
 
   function shouldIgnoreGlobalTap(target) {
@@ -360,13 +385,18 @@
     if (e.repeat) return;
     if (e.code === "Space" || e.code === "ArrowUp") {
       e.preventDefault();
-      jump();
+      if (state.running) jump();
     }
-    if (e.code === "KeyR") reset();
+    if (e.code === "KeyR") {
+      // Keep "Start" as the primary entry; R is only for quick restart during/after a run.
+      if (!state.running && !state.gameOver) return;
+      reset();
+      hideStartScreen();
+    }
   });
   canvas.addEventListener("pointerdown", (e) => {
     e.preventDefault();
-    jump();
+    if (state.running) jump();
   });
 
   // Mobile-friendly: tap anywhere (except controls) to jump
@@ -376,7 +406,7 @@
       if (shouldIgnoreGlobalTap(e.target)) return;
       // don't double-trigger if canvas already handled it
       if (e.target === canvas) return;
-      jump();
+      if (state.running) jump();
     },
     { passive: true },
   );
@@ -395,11 +425,6 @@
       applyTheme(themeSelect.value);
     });
   }
-  if (savePlayerBtn) {
-    savePlayerBtn.addEventListener("click", () => {
-      savePlayerId(playerIdInput?.value);
-    });
-  }
   if (playerIdInput) {
     playerIdInput.addEventListener("change", () => {
       // no button needed: just changing the value will persist when valid
@@ -408,11 +433,25 @@
     playerIdInput.addEventListener("keydown", (e) => {
       if (e.key === "Enter") {
         e.preventDefault();
-        if (ensurePlayerIdFromInput()) setBoardMsg(`아이디 저장됨: ${playerId}`);
+        startGameFlow();
       }
     });
   }
-  if (refreshBoardBtn) refreshBoardBtn.addEventListener("click", refreshLeaderboard);
+
+  function startGameFlow() {
+    const typed = String(playerIdInput?.value || "").trim();
+    if (!isValidPlayerId(typed)) {
+      setBoardMsg("아이디는 2~20자 (영문/숫자/한글/공백/_/-)만 가능합니다.");
+      return;
+    }
+    savePlayerId(typed);
+    if (randomThemeEnabled) applyRandomTheme();
+    reset();
+    hideStartScreen();
+    setBoardMsg("");
+  }
+
+  if (startBtn) startBtn.addEventListener("click", startGameFlow);
 
   // Render helpers
   function drawRoundedRect(x, y, w, h, r) {
@@ -833,6 +872,7 @@
   for (let i = 0; i < 4; i++) state.clouds.push(makeCloud(true));
   updateHUD();
   refreshLeaderboard();
+  showStartScreen("menu");
   requestAnimationFrame(loop);
 })();
 
