@@ -156,7 +156,7 @@
     if (mode === "gameover") {
       setStartText("GAME OVER", `점수: ${finalScore ?? 0} · 아이디 입력 후 다시 시작할 수 있어요.`, "다시 시작");
     } else {
-      setStartText("돼지 점프", "아이디 입력 후 시작하기를 눌러주세요.", "시작하기");
+      setStartText("돼지띠가 만든 돼지게임", "아이디 입력 후 시작하기를 눌러주세요.", "시작하기");
     }
   }
 
