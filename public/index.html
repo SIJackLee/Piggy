@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>돼지띠가 만든 돼지게임</title>
+    <meta name="description" content="HTML5 Canvas로 만든 공룡점프 변형: 돼지 점프 게임" />
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand__title">돼지띠가 만든 돼지게임</span>
+        <span class="brand__subtitle">Pig Jump</span>
+      </div>
+      <div class="hud" aria-live="polite">
+        <div class="hud__item"><span class="hud__label">SCORE</span> <span id="score">0</span></div>
+        <div class="hud__item"><span class="hud__label">BEST</span> <span id="best">0</span></div>
+      </div>
+    </header>
+
+    <main class="stage">
+      <canvas id="game" width="1620" height="1080" aria-label="돼지 점프 게임 화면" role="img"></canvas>
+
+      <section id="startScreen" class="start" aria-label="시작 화면">
+        <div class="start__card" role="dialog" aria-modal="true" aria-label="게임 시작">
+          <div class="start__header">
+            <h2 id="startTitle" class="start__title">돼지띠가 만든 돼지게임</h2>
+            <p id="startSubtitle" class="start__subtitle">아이디 입력 후 시작하기를 눌러주세요.</p>
+            
+            <div class="start__desc">
+              <p>🐷 <strong>돼지가 달립니다!</strong> 길게 달리 기록을 세워보세요.</p>
+              <p>🕹️ <strong>조작</strong>: Space 또는 터치로 점프</p>
+              <p>💩 <strong>장애물</strong>: 부딪히면 돼지가 더러워져요. (3번 = 게임오버)</p>
+              <p>🧼 <strong>아이템</strong>: <span style="color:#4ade80;font-weight:bold">Bleon</span>을 먹으면 깨끗해져요!</p>
+            </div>
+          </div>
+
+          <div class="start__controls">
+            <label class="field field--compact">
+              <span class="field__label">테마</span>
+              <select id="theme" class="field__input" aria-label="게임 테마 선택">
+                <option value="farm">Farm</option>
+                <option value="space">Space</option>
+                <option value="factory">Factory</option>
+                <option value="candy">Candy</option>
+              </select>
+            </label>
+
+            <label class="field field--compact">
+              <span class="field__label">랜덤</span>
+              <label class="toggle">
+                <input id="randomTheme" type="checkbox" />
+                <span class="toggle__pill" aria-hidden="true"></span>
+                <span class="toggle__text">테마 랜덤</span>
+              </label>
+            </label>
+
+            <label class="field start__player">
+              <span class="field__label">아이디(닉네임)</span>
+              <input id="playerId" class="field__input" maxlength="20" placeholder="예: piggy_01" />
+            </label>
+
+            <button id="startBtn" class="btn" type="button">시작하기</button>
+          </div>
+
+          <p id="boardMsg" class="muted" aria-live="polite"></p>
+
+          <div class="start__board">
+            <div class="start__boardTitle">전체 등수</div>
+            <ol id="leaderboard" class="board" aria-label="전체 등수 목록"></ol>
+          </div>
+        </div>
+      </section>
+
+      <section class="help" aria-label="조작 안내">
+        <div class="help__row">
+          <span class="kbd">SPACE</span> / <span class="kbd">↑</span> / <span class="kbd">터치</span>
+          <span class="help__text">점프</span>
+        </div>
+        <div class="help__row">
+          <span class="kbd">R</span>
+          <span class="help__text">재시작</span>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <span class="footer__muted">HTML5 Canvas · 로컬 저장: 최고점수</span>
+    </footer>
+
+    <script src="./game.js" defer></script>
+  </body>
+</html>
+
+
