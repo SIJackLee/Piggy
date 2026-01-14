@@ -548,7 +548,7 @@
     });
   }
 
-  function startGameFlow() {
+  async function startGameFlow() {
     const typed = String(playerIdInput?.value || "").trim();
     if (!isValidPlayerId(typed)) {
       setBoardMsg("아이디는 2~20자 (영문/숫자/한글/공백/_/-)만 가능합니다.");
@@ -556,6 +556,10 @@
     }
     savePlayerId(typed);
     if (randomThemeEnabled) applyRandomTheme();
+    
+    // 모바일에서 효과음이 잘 들리도록 AudioContext 초기화
+    await initAudioContext();
+    
     reset();
     hideStartScreen();
     setBoardMsg("");
@@ -592,11 +596,41 @@
     isMusicPlaying = false;
   }
 
-  function playSoundEffect(frequencies, durations, type = 'sine') {
+  async function initAudioContext() {
     if (!audioContext) {
       try {
         audioContext = new (window.AudioContext || window.webkitAudioContext)();
       } catch (e) {
+        console.warn("AudioContext 생성 실패:", e);
+        return false;
+      }
+    }
+    
+    // 모바일 브라우저에서 suspended 상태일 수 있으므로 resume
+    if (audioContext.state === 'suspended') {
+      try {
+        await audioContext.resume();
+      } catch (e) {
+        console.warn("AudioContext resume 실패:", e);
+        return false;
+      }
+    }
+    
+    return true;
+  }
+
+  async function playSoundEffect(frequencies, durations, type = 'sine') {
+    if (!audioContext) {
+      const initialized = await initAudioContext();
+      if (!initialized) return;
+    }
+    
+    // 모바일에서 suspended 상태일 수 있으므로 resume
+    if (audioContext.state === 'suspended') {
+      try {
+        await audioContext.resume();
+      } catch (e) {
+        console.warn("AudioContext resume 실패:", e);
         return;
       }
     }
@@ -634,7 +668,7 @@
       [523.25, 659.25, 783.99, 987.77], // C5, E5, G5, B5
       [0.1, 0.1, 0.1, 0.15],
       'sine'
-    );
+    ).catch(() => {}); // 에러 무시
   }
 
   function playPigletSound() {
@@ -643,7 +677,7 @@
       [493.88, 523.25], // C5, B4, A4 (하이톤)
       [0.15, 0.15, 0.2],
       'sine'
-    );
+    ).catch(() => {}); // 에러 무시
   }
 
   function playBleonSound() {
@@ -652,19 +686,19 @@
       [220.00, 293.66, 392.00], // A3, D4, G4
       [0.1, 0.15, 0.2],
       'square'
-    );
+    ).catch(() => {}); // 에러 무시
   }
 
-  function startInvincibleMusic() {
+  async function startInvincibleMusic() {
     // 무적 상태 배경음악 (더 긴장감 있는 멜로디)
     if (isMusicPlaying) {
       stopBackgroundMusic();
     }
     
     try {
-      if (!audioContext) {
-        audioContext = new (window.AudioContext || window.webkitAudioContext)();
-      }
+      const initialized = await initAudioContext();
+      if (!initialized) return;
+      
       bgMusicGain = audioContext.createGain();
       bgMusicGain.connect(audioContext.destination);
       bgMusicGain.gain.value = 0.12;
