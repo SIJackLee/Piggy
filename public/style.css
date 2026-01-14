@@ -153,6 +153,7 @@ canvas#game {
   place-items: center;
   padding: 18px;
   pointer-events: none;
+  z-index: 1000;
 }
 
 .start__card {
@@ -207,6 +208,47 @@ canvas#game {
   color: var(--muted);
   letter-spacing: 0.06em;
   margin-bottom: 6px;
+}
+
+.start__guide {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--stroke);
+}
+
+.start__guideTitle {
+  font-size: 24px;
+  color: var(--muted);
+  letter-spacing: 0.06em;
+  margin-bottom: 8px;
+}
+
+.start__guideContent {
+  display: grid;
+  gap: 6px;
+}
+
+.guide__item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 22px;
+  color: var(--text);
+  line-height: 1.4;
+}
+
+.guide__icon {
+  font-size: 32px;
+  flex-shrink: 0;
+}
+
+.guide__text {
+  flex: 1;
+}
+
+.guide__text strong {
+  color: var(--accent);
+  font-weight: 650;
 }
 
 .board {
